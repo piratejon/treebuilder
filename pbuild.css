@@ -1,0 +1,12 @@
+
+#nodetree > span {
+  font-family: monospace;
+  white-space: pre;
+  unicode-bidi: embed;
+}
+
+#nodetree li {
+  list-style-type: none;
+}
+
+

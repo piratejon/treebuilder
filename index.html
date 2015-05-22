@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <link rel='stylesheet' href='pbuild.css'>
+    <title>predicate builder thingy demo</title>
+    <script src='pbuild.js'></script>
+  </head>
+  <body>
+    <datalist id='default_dropdown_choices'>
+      <option value='and'>and</option>
+      <option value='or'>or</option>
+      <option value='between'>between</option>
+      <option value='='>=</option>
+      <option value='>='>&gt;=</option>
+      <option value='>'>&gt;</option>
+      <option value='<='>&lt;</option>
+      <option value='<'>&lt;</option>
+      <option value='<>'>&lt;&gt;</option>
+      <option value='in'>in</option>
+      <option value='not in'>not in</option>
+      <option value='list'>list</option>
+    </datalist>
+    <input type='button' value='Reset' onclick='pb.insert_root_node("nodetree");'>
+    <ul id='nodetree'></ul>
+  </body>
+</html>
+
