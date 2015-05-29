@@ -1,7 +1,6 @@
 /*jslint browser:true */
-"use strict";
-
 var pb = (function () {
+    "use strict";
     var create_node;
 
     function remove_element_children(e) {
@@ -25,7 +24,7 @@ var pb = (function () {
         var tgt;
         tgt = get_target_element(e);
         // assumes ul is the last one
-        tgt.parentElement.lastChild.appendChild(create_node());
+        tgt.parentElement.lastElementChild.appendChild(create_node());
     }
 
     function node_remove(e) {
@@ -41,8 +40,8 @@ var pb = (function () {
         var tgt;
         tgt = get_target_element(e).parentNode;
 
-        if (tgt.previousSibling !== null && tgt.parentNode !== null) {
-            tgt.parentNode.insertBefore(tgt, tgt.previousSibling);
+        if (tgt.previousElementSibling !== null && tgt.parentNode !== null) {
+            tgt.parentNode.insertBefore(tgt, tgt.previousElementSibling);
         }
     }
 
@@ -51,8 +50,8 @@ var pb = (function () {
         var tgt;
         tgt = get_target_element(e).parentNode;
 
-        if (tgt.nextSibling !== null && tgt.parentNode !== null) {
-            tgt.parentNode.insertBefore(tgt.nextSibling, tgt);
+        if (tgt.nextElementSibling !== null && tgt.parentNode !== null) {
+            tgt.parentNode.insertBefore(tgt.nextElementSibling, tgt);
         }
     }
 
@@ -70,13 +69,13 @@ var pb = (function () {
 
     function list_expander(e) {
         var tgt;
-        tgt = get_target_element(e).parentNode.lastChild;
+        tgt = get_target_element(e).parentNode.lastElementChild;
         if (tgt.style.display === 'none') {
             tgt.style.display = 'block';
-            tgt.parentNode.firstChild.textContent = '-';
+            tgt.parentNode.firstElementChild.textContent = '-';
         } else {
             tgt.style.display = 'none';
-            tgt.parentNode.firstChild.textContent = '+';
+            tgt.parentNode.firstElementChild.textContent = '+';
         }
     }
 
@@ -101,6 +100,60 @@ var pb = (function () {
 
         return li;
     };
+    
+    function get_elt_value(elt) {
+        // elt is some LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
+        // the value is the value of the first input tag
+        return elt.firstElementChild.nextElementSibling.value;
+    }
+    
+    function get_first_child(elt) {
+        // elt is some LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
+        if (elt.lastElementChild.tagName === 'UL') {
+            return elt.lastElementChild.firstElementChild; // this should be an LI
+        }
+        return null;
+    }
+    
+    function element_child_itererator(elt, fn) {
+        var kid;
+        for (kid = get_first_child(elt); kid !== null; kid = kid.nextElementSibling) {
+            console.log(kid);
+            fn(kid);
+        }
+    }
+    
+    function serialize(elt, root) {
+        // elt is an LI in our UL#nodetree
+        // it has children SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, and optional UL
+        var node, attr, kid;
+
+        attr = root.createAttribute('value');
+        
+        attr.nodeValue = get_elt_value(elt);
+        
+        node = root.createElement('node');
+        node.setAttributeNode(attr);
+
+        element_child_itererator(elt, function (kid) {
+            node.appendChild(serialize(kid, root));
+        });
+
+        return node;
+    }
+    
+    function serialize_to(id) {
+        var target, root;
+        
+        target = document.getElementById(id);
+        
+        root = document.implementation.createDocument(null, 'nodetree', null);
+        
+        root.documentElement.appendChild(serialize(document.getElementById('nodetree').firstElementChild, root));
+
+        console.log(root);
+        target.value = (new XMLSerializer()).serializeToString(root);
+    }
 
     function insert_root_node(id) {
         remove_element_children(document.getElementById(id));
@@ -109,6 +162,6 @@ var pb = (function () {
 
     return {
         'insert_root_node': insert_root_node,
+        'serialize_to': serialize_to
     };
 }());
-
