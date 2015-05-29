@@ -1,5 +1,5 @@
 /*jslint browser:true */
-var pb = (function () {
+var tb = (function () {
     "use strict";
     var create_node;
 
@@ -115,10 +115,9 @@ var pb = (function () {
         return null;
     }
     
-    function element_child_itererator(elt, fn) {
+    function element_child_iterator(elt, fn) {
         var kid;
         for (kid = get_first_child(elt); kid !== null; kid = kid.nextElementSibling) {
-            console.log(kid);
             fn(kid);
         }
     }
@@ -135,7 +134,7 @@ var pb = (function () {
         node = root.createElement('node');
         node.setAttributeNode(attr);
 
-        element_child_itererator(elt, function (kid) {
+        element_child_iterator(elt, function (kid) {
             node.appendChild(serialize(kid, root));
         });
 
@@ -151,7 +150,6 @@ var pb = (function () {
         
         root.documentElement.appendChild(serialize(document.getElementById('nodetree').firstElementChild, root));
 
-        console.log(root);
         target.value = (new XMLSerializer()).serializeToString(root);
     }
 
