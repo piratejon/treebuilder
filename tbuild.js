@@ -169,14 +169,14 @@ var tb = (function () {
 
         root.documentElement.appendChild(serialize(document.getElementById('nodetree').firstElementChild, root));
 
-        target.value = (new XMLSerializer()).serializeToString(root);
+        target.value = (new window.XMLSerializer()).serializeToString(root);
     }
 
     function unserialize_from(id) {
         var src_raw, src_xml, dst, src_root;
 
         src_raw = document.getElementById(id).value;
-        src_xml = (new DOMParser()).parseFromString(src_raw, 'text/xml');
+        src_xml = (new window.DOMParser()).parseFromString(src_raw, 'text/xml');
         src_root = src_xml.firstChild.firstChild;
 
         dst = document.getElementById('nodetree');
