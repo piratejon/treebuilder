@@ -79,12 +79,12 @@ var tb = (function () {
         }
     }
 
-    create_node = function () {
+    create_node = function (text) {
         var li, child_elts, i;
 
         child_elts = [
             ['span', { 'textContent': '-', onclick: list_expander }],
-            ['input', { 'type': 'text', 'size': 6 }],
+            ['input', { 'type': 'text', 'value': text, 'size': 6 }],
             ['input', { 'type': 'button', 'value': '+', 'onclick': node_add }],
             ['input', { 'type': 'button', 'value': 'x', 'onclick': node_remove }],
             ['input', { 'type': 'button', 'value': '^', 'onclick': node_move_up }],
@@ -100,13 +100,13 @@ var tb = (function () {
 
         return li;
     };
-    
+
     function get_elt_value(elt) {
         // elt is some LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
         // the value is the value of the first input tag
         return elt.firstElementChild.nextElementSibling.value;
     }
-    
+
     function get_first_child(elt) {
         // elt is some LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
         if (elt.lastElementChild.tagName === 'UL') {
@@ -114,23 +114,30 @@ var tb = (function () {
         }
         return null;
     }
-    
+
     function element_child_iterator(elt, fn) {
         var kid;
         for (kid = get_first_child(elt); kid !== null; kid = kid.nextElementSibling) {
             fn(kid);
         }
     }
-    
+
+    function node_child_iterator(node, fn) {
+        var kid;
+        for (kid = node.firstElementChild; kid !== null; kid = kid.nextElementSibling) {
+            fn(kid);
+        }
+    }
+
     function serialize(elt, root) {
         // elt is an LI in our UL#nodetree
         // it has children SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, and optional UL
-        var node, attr, kid;
+        var node, attr;
 
         attr = root.createAttribute('value');
-        
+
         attr.nodeValue = get_elt_value(elt);
-        
+
         node = root.createElement('node');
         node.setAttributeNode(attr);
 
@@ -140,17 +147,43 @@ var tb = (function () {
 
         return node;
     }
-    
+
+    function unserialize(node) {
+        var elt;
+
+        elt = create_node(node.getAttribute('value'));
+
+        node_child_iterator(node, function (kid) {
+            elt.lastElementChild.appendChild(unserialize(kid));
+        });
+
+        return elt;
+    }
+
     function serialize_to(id) {
         var target, root;
-        
+
         target = document.getElementById(id);
-        
+
         root = document.implementation.createDocument(null, 'nodetree', null);
-        
+
         root.documentElement.appendChild(serialize(document.getElementById('nodetree').firstElementChild, root));
 
         target.value = (new XMLSerializer()).serializeToString(root);
+    }
+
+    function unserialize_from(id) {
+        var src_raw, src_xml, dst, src_root;
+
+        src_raw = document.getElementById(id).value;
+        src_xml = (new DOMParser()).parseFromString(src_raw, 'text/xml');
+        src_root = src_xml.firstChild.firstChild;
+
+        dst = document.getElementById('nodetree');
+
+        remove_element_children(dst);
+
+        dst.appendChild(unserialize(src_root));
     }
 
     function insert_root_node(id) {
@@ -160,6 +193,7 @@ var tb = (function () {
 
     return {
         'insert_root_node': insert_root_node,
-        'serialize_to': serialize_to
+        'serialize_to': serialize_to,
+        'unserialize_from': unserialize_from
     };
 }());
