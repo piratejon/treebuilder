@@ -17,7 +17,7 @@ var tb = (function () {
 
         'from_dom': {
             // elt is an LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
-            'create_element': function (text, root) {
+            'create_element': function (text) {
                 var li, child_elts, i, parent_this;
 
                 parent_this = this;
@@ -98,11 +98,11 @@ var tb = (function () {
                     ['ul', {}]
                 ];
 
-                li = root.createElement('li');
+                li = document.createElement('li');
 
                 function element_from_descriptor(element_descriptor) {
                     var elt, prop, key;
-                    elt = root.createElement(element_descriptor[0]);
+                    elt = document.createElement(element_descriptor[0]);
                     prop = element_descriptor[1];
                     for (key in prop) {
                         if (prop.hasOwnProperty(key)) {
@@ -145,15 +145,15 @@ var tb = (function () {
         },
 
         'from_xml': {
-            'create_element': function (text, root) {
+            'create_element': function (text) {
                 var node, attr;
 
                 if (this.root === undefined) {
-                    this.root = 
+                    this.root = document.implementation.createDocument(null, 'nodetree', null);
                 }
-                attr = root.createAttribute('value');
+                attr = this.root.createAttribute('value');
                 attr.nodeValue = text;
-                node = root.createElement('node');
+                node = this.root.createElement('node');
                 node.setAttributeNode(attr);
                 return node;
             },
@@ -188,13 +188,11 @@ var tb = (function () {
     }
 
     function serialize(elt) {
-        // elt is an LI in our UL#nodetree
-        // it has children SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, and optional UL
-        var node, attr;
+        var node;
 
-        node = translators.from_xml.create_node(translators.from_dom.get_value(elt));
+        node = translators.from_xml.create_element(translators.from_dom.get_value(elt));
 
-        translators.from_dom.element_child_iterator(elt, function (kid) {
+        translators.from_dom.iterate_children(elt, function (kid) {
             translators.from_xml.append_child(node, serialize(kid));
         });
 
@@ -204,10 +202,10 @@ var tb = (function () {
     function unserialize(node) {
         var elt;
 
-        elt = translators.from_dom.create_node(translators.from_xml.get_value(node));
+        elt = translators.from_dom.create_element(translators.from_xml.get_value(node));
 
-        translators.from_xml.node_child_iterator(node, function (kid) {
-            eranslators.from_dom.append_child(elt, (unserialize(kid));
+        translators.from_xml.iterate_children(node, function (kid) {
+            translators.from_dom.append_child(elt, unserialize(kid));
         });
 
         return elt;
