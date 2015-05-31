@@ -15,7 +15,7 @@ var tb = (function () {
          *   append_child(append_to, appendee)
          */
 
-        'from_dom': {
+        'dom': {
             // elt is an LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
             'create_element': function (text) {
                 var li, child_elts, i, parent_this;
@@ -144,7 +144,7 @@ var tb = (function () {
             }
         },
 
-        'from_xml': {
+        'xml': {
             'create_element': function (text) {
                 var node, attr;
 
@@ -187,28 +187,16 @@ var tb = (function () {
         }
     }
 
-    function serialize(elt) {
-        var node;
+    function translate(e_src, t_src, t_dst) {
+        var e_dst;
 
-        node = translators.from_xml.create_element(translators.from_dom.get_value(elt));
+        e_dst = t_dst.create_element(t_src.get_value(e_src));
 
-        translators.from_dom.iterate_children(elt, function (kid) {
-            translators.from_xml.append_child(node, serialize(kid));
+        t_src.iterate_children(e_src, function (kid) {
+            t_dst.append_child(e_dst, translate(kid, t_src, t_dst));
         });
 
-        return node;
-    }
-
-    function unserialize(node) {
-        var elt;
-
-        elt = translators.from_dom.create_element(translators.from_xml.get_value(node));
-
-        translators.from_xml.iterate_children(node, function (kid) {
-            translators.from_dom.append_child(elt, unserialize(kid));
-        });
-
-        return elt;
+        return e_dst;
     }
 
     function serialize_to(id) {
@@ -218,7 +206,13 @@ var tb = (function () {
 
         root = document.implementation.createDocument(null, 'nodetree', null);
 
-        root.documentElement.appendChild(serialize(document.getElementById('nodetree').firstElementChild, root));
+        root.documentElement.appendChild(
+            translate(
+                document.getElementById('nodetree').firstElementChild,
+                translators.dom,
+                translators.xml
+            )
+        );
 
         target.value = (new window.XMLSerializer()).serializeToString(root);
     }
@@ -234,7 +228,7 @@ var tb = (function () {
 
         remove_element_children(dst);
 
-        dst.appendChild(unserialize(src_root));
+        dst.appendChild(translate(src_root, translators.xml, translators.dom));
     }
 
     function insert_root_node(id) {
