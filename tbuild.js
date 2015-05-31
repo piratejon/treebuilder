@@ -1,14 +1,52 @@
 /*jslint browser:true */
 var tb = (function () {
     "use strict";
-    var create_node;
-
+    var create_node, dom_interface_handlers;
+    
+    dom_interface_handlers = function (context) {
+        return (function (ctx) {
+            var e_ctx;
+            e_ctx = this;
+            return {
+                'node_add': function (e) {
+                    var tgt;
+                    tgt = get_target_element(e);
+                    ctx.append_child(ctx.create_node(e_ctx.get_value(e)));
+                },
+                'node_remove': function (e) {
+                },
+                'node_move_up': function (e) {
+                },
+                'node_move_down': function (e) {
+                },
+                'get_value': function (e) {
+                    return e.firstElementChild.nextElementSibling.value;
+                }
+            };
+        }(context));
+    };
+    
+    dom_interface_handlers = {
+        'node_add': function (e) {
+            var tgt;
+            tgt = get_target_element(e);
+            // assumes ul is the last one
+            tgt.parentElement.lastElementChild.appendChild(create_node());
+        },
+        'node_remove': function (e) {
+        },
+        'node_move_up': function (e) {
+        },
+        'node_move_down': function (e) {
+        }
+    };
+    
     function remove_element_children(e) {
         while (e.firstChild) {
             e.removeChild(e.firstChild);
         }
     }
-
+    
     function get_target_element(e) {
         // <http://stackoverflow.com/a/1553668>
         var tgt;
@@ -184,6 +222,113 @@ var tb = (function () {
         remove_element_children(dst);
 
         dst.appendChild(unserialize(src_root));
+    }
+
+    function setup_things() {
+        var from_xml, from_dom;
+        
+        /*
+        *
+        * from_XXX provides:
+        *   create_element(text)
+        *   get_next_sibling(elt)
+        *   get_previous_sibling(elt)
+        *   get_value(elt)
+        *   get_first_child(elt)
+        *   iterate_children(elt, fn)
+        */
+        
+        from_dom = {
+            // elt is an LI which contains a SPAN, INPUT, INPUT, INPUT, INPUT, INPUT, UL
+            'create_element': function (text) {
+                var li, child_elts, i;
+
+                child_elts = [
+                    ['span', {
+                        'textContent':  '-',
+                        'onclick':      function (e) {
+                            var tgt;
+                            tgt = get_target_element(e).parentNode.lastElementChild;
+                            if (tgt.style.display === 'none') {
+                                tgt.style.display = 'block';
+                                tgt.parentNode.firstElementChild.textContent = '-';
+                            } else {
+                                tgt.style.display = 'none';
+                                tgt.parentNode.firstElementChild.textContent = '+';
+                            }
+                        }
+                    }],
+                    ['input', { 'type': 'text', 'value': text, 'size': 6 }],
+                    ['input', {
+                        'type':     'button',
+                        'value':    '+',
+                        'onclick':  function (e) {
+                            var tgt;
+                            tgt = get_target_element(e);
+                            tgt.parentElement.lastElementChild.appendChild(create_node());
+                        }
+                    }],
+                    ['input', {
+                        'type':     'button',
+                        'value':    'x',
+                        'onclick':  function (e) {
+                            var tgt;
+                            tgt = get_target_element(e).parentElement;
+                            if (tgt !== null && tgt.parentElement !== null) {
+                                tgt.parentElement.removeChild(tgt);
+                            }
+                        }
+                    }],
+                    ['input', { 'type': 'button', 'value': '^', 'onclick': node_move_up }],
+                    ['input', { 'type': 'button', 'value': 'v', 'onclick': node_move_down }],
+                    ['ul', {}]
+                ];
+
+                li = document.createElement('li');
+
+                for (i = 0; i < child_elts.length; i += 1) {
+                    li.appendChild(create_element(child_elts[i]));
+                }
+
+                return li;
+            },
+            'get_next_sibling': function (elt) {
+                return elt.nextElementSibling;
+            },
+            'get_previous_sibling': function (elt) {
+                return elt.previousElementSibling;
+            },
+            'get_value': function (elt) {
+                return elt.firstElementChild.nextElementSibling.value;
+            },
+            'get_first_child': function (elt) {
+                if (elt.lastElementChild.tagName === 'UL') {
+                    return elt.lastElementChild.firstElementChild;
+                }
+                return null;
+            },
+            'iterate_children': function (elt, fn) {
+                var kid;
+                for (kid = this.get_first_child(elt); kid !== null; kid = this.get_next_sibling(kid)) {
+                    fn(kid);
+                }
+            }
+        };
+        
+        from_xml = {
+            'create_element': function (text) {
+            },
+            'get_next_sibling': function (elt) {
+            },
+            'get_previous_sibling': function (elt) {
+            },
+            'get_value': function (elt) {
+            },
+            'get_first_child': function (elt) {
+            },
+            'iterate_children': function (elt, fn) {
+            }
+        };
     }
 
     function insert_root_node(id) {
