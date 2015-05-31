@@ -129,10 +129,13 @@ var tb = (function () {
                 return elt.previousElementSibling;
             },
             'get_value': function (elt) {
-                return elt.firstElementChild.nextElementSibling.value;
+                if (this.get_first_child(elt) !== null && this.get_next_sibling(this.get_first_child(elt)) !== null) {
+                    return elt.firstElementChild.nextElementSibling.value;
+                }
+                return null;
             },
             'get_first_child': function (elt) {
-                if (elt.lastElementChild.tagName === 'UL') {
+                if (elt.lastElementChild !== null && elt.lastElementChild.tagName === 'UL') {
                     return elt.lastElementChild.firstElementChild;
                 }
                 return null;
@@ -210,13 +213,9 @@ var tb = (function () {
     }
 
     function unserialize_from_string(dst_elt, src_doc) {
-        // fill dst_elt based on xml parsed from 
         remove_element_children(dst_elt);
 
-        console.log(src_doc);
-
-        translators.dom.append_child(
-            dst_elt,
+        dst_elt.appendChild(
             translate(src_doc, translators.xml, translators.dom)
         );
     }
@@ -236,7 +235,7 @@ var tb = (function () {
         // recreate the tree based on the textarea contents
         unserialize_from_string(
             document.getElementById(dst_id),
-            xml_parser(document.getElementById(src_id).value)
+            xml_parser(document.getElementById(src_id).value).firstElementChild.firstElementChild
         );
     }
 
@@ -244,7 +243,7 @@ var tb = (function () {
         // put a default one-node tree in there
         unserialize_from_string(
             document.getElementById(id),
-            xml_parser('<nodetree><node/></nodetree>')
+            xml_parser('<nodetree><node/></nodetree>').firstElementChild.firstElementChild
         );
     }
 
