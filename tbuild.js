@@ -5,14 +5,14 @@ var tb = (function () {
 
     translators = {
         /*
-         * from_XXX provides:
+         * dom/xml provides:
          *   create_element(text, [root])
          *   get_next_sibling(elt)
          *   get_previous_sibling(elt)
          *   get_value(elt)
          *   get_first_child(elt)
          *   iterate_children(elt, fn)
-         *   append_child(append_to, appendee)
+         *   append_child(dst, appendee)
          */
 
         'dom': {
@@ -20,7 +20,11 @@ var tb = (function () {
             'create_element': function (text) {
                 var li, child_elts, i, parent_this;
 
-                parent_this = this;
+                if (text === undefined) {
+                    text = '';
+                }
+
+                parent_this = this; // need to access own create_element
 
                 function get_target_element(e) {
                     // <http://stackoverflow.com/a/1553668>
@@ -55,7 +59,7 @@ var tb = (function () {
                         'onclick':  function (e) {
                             var tgt;
                             tgt = get_target_element(e);
-                            tgt.parentElement.lastElementChild.appendChild(parent_this.create_node());
+                            tgt.parentElement.lastElementChild.appendChild(parent_this.create_element());
                         }
                     }],
                     ['input', {
@@ -199,46 +203,54 @@ var tb = (function () {
         return e_dst;
     }
 
-    function serialize_to(id) {
-        var target, root;
-
-        target = document.getElementById(id);
-
-        root = document.implementation.createDocument(null, 'nodetree', null);
-
-        root.documentElement.appendChild(
-            translate(
-                document.getElementById('nodetree').firstElementChild,
-                translators.dom,
-                translators.xml
-            )
+    function serialize_from_dom(src_elt, serializer) {
+        return serializer(
+            translate(src_elt, translators.dom, translators.xml)
         );
-
-        target.value = (new window.XMLSerializer()).serializeToString(root);
     }
 
-    function unserialize_from(id) {
-        var src_raw, src_xml, dst, src_root;
+    function unserialize_from_string(dst_elt, src_doc) {
+        // fill dst_elt based on xml parsed from 
+        remove_element_children(dst_elt);
 
-        src_raw = document.getElementById(id).value;
-        src_xml = (new window.DOMParser()).parseFromString(src_raw, 'text/xml');
-        src_root = src_xml.firstChild.firstChild;
+        console.log(src_doc);
 
-        dst = document.getElementById('nodetree');
-
-        remove_element_children(dst);
-
-        dst.appendChild(translate(src_root, translators.xml, translators.dom));
+        translators.dom.append_child(
+            dst_elt,
+            translate(src_doc, translators.xml, translators.dom)
+        );
     }
 
-    function insert_root_node(id) {
-        remove_element_children(document.getElementById(id));
-        document.getElementById(id).appendChild(translators.from_dom.create_node());
+    function serialize_by_ids(src_id, dst_id) {
+        document.getElementById(dst_id).value = serialize_from_dom(
+            document.implementation.createDocument(null, 'nodetree', null),
+            document.getElementById(src_id)
+        );
+    }
+
+    function xml_parser(xml) {
+        return (new window.DOMParser()).parseFromString(xml, 'text/xml');
+    }
+
+    function unserialize_by_ids(src_id, dst_id) {
+        // recreate the tree based on the textarea contents
+        unserialize_from_string(
+            document.getElementById(dst_id),
+            xml_parser(document.getElementById(src_id).value)
+        );
+    }
+
+    function reset_root_node(id) {
+        // put a default one-node tree in there
+        unserialize_from_string(
+            document.getElementById(id),
+            xml_parser('<nodetree><node/></nodetree>')
+        );
     }
 
     return {
-        'insert_root_node': insert_root_node,
-        'serialize_to': serialize_to,
-        'unserialize_from': unserialize_from
+        'reset_root_node': reset_root_node,
+        'serialize': serialize_by_ids,
+        'unserialize': unserialize_by_ids
     };
 }());
