@@ -26,7 +26,7 @@ var tb = (function () {
             dst.appendChild(appendee);
         };
     }
-    
+
     xml_translator = new DefaultTranslator();
     xml_translator.get_value = function (e) {
         return e.getAttribute('value');
@@ -43,7 +43,7 @@ var tb = (function () {
         node.setAttributeNode(attr);
         return node;
     };
-    
+
     dom_translator = new DefaultTranslator();
     dom_translator.create_element = function (text) {
         var parent_this, element_from_descriptor, node, children, buttons;
@@ -53,17 +53,6 @@ var tb = (function () {
         }
 
         parent_this = this; // need to access own create_element
-
-        function get_target_element(e) {
-            // <http://stackoverflow.com/a/1553668>
-            var tgt;
-            e = e || window.event;
-            tgt = e.target || e.srcElement;
-            if (tgt.nodeType === 3) {
-                tgt = tgt.parentNode;
-            }
-            return tgt;
-        }
 
         node = document.createElement('li');
 
@@ -82,10 +71,10 @@ var tb = (function () {
                 }
             }
         }
-        
+
         element_from_descriptor = function (element_descriptor) {
             var elt;
-            
+
             elt = document.createElement(element_descriptor.tag);
 
             if (element_descriptor.attributes !== undefined) {
@@ -104,7 +93,7 @@ var tb = (function () {
                 'tag': 'span',
                 'attributes': {
                     'textContent':  '-',
-                    'onclick':      function (e) {
+                    'onclick':      function () {
                         if (children.style.display === 'none') {
                             children.style.display = 'block';
                             node.firstElementChild.textContent = '-';
@@ -125,14 +114,14 @@ var tb = (function () {
             }
         ]
             );
-        
+
         buttons = document.createElement('div');
         fill_up_children(buttons, [
             {
                 'tag': 'span',
                 'attributes': {
                     'textContent':  '+',
-                    'onclick':      function (e) {
+                    'onclick':      function () {
                         children.appendChild(parent_this.create_element());
                     }
                 }
@@ -141,7 +130,7 @@ var tb = (function () {
                 'tag': 'span',
                 'attributes': {
                     'textContent':  'x',
-                    'onclick':      function (e) {
+                    'onclick':      function () {
                         if (node.parentElement !== null) {
                             node.parentElement.removeChild(node);
                         }
@@ -152,7 +141,7 @@ var tb = (function () {
                 'tag': 'span',
                 'attributes': {
                     'textContent':  '^',
-                    'onclick':      function (e) {
+                    'onclick':      function () {
                         // swap with previous sibling if any
                         if (node.previousElementSibling !== null && node.parentNode !== null) {
                             node.parentNode.insertBefore(node, node.previousElementSibling);
@@ -164,7 +153,7 @@ var tb = (function () {
                 'tag': 'span',
                 'attributes': {
                     'textContent':  'v',
-                    'onclick':      function (e) {
+                    'onclick':      function () {
                         if (node.nextElementSibling !== null && node.parentNode !== null) {
                             node.parentNode.insertBefore(node.nextElementSibling, node);
                         }
@@ -173,9 +162,9 @@ var tb = (function () {
             }
         ]
                          );
-        
+
         node.appendChild(buttons);
-        
+
         children = document.createElement('ul');
         node.appendChild(children);
 
