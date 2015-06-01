@@ -129,10 +129,7 @@ var tb = (function () {
                 return elt.previousElementSibling;
             },
             'get_value': function (elt) {
-                if (this.get_first_child(elt) !== null && this.get_next_sibling(this.get_first_child(elt)) !== null) {
-                    return elt.firstElementChild.nextElementSibling.value;
-                }
-                return null;
+                return elt.firstElementChild.nextElementSibling.value;
             },
             'get_first_child': function (elt) {
                 if (elt.lastElementChild !== null && elt.lastElementChild.tagName === 'UL') {
@@ -207,9 +204,15 @@ var tb = (function () {
     }
 
     function serialize_from_dom(src_elt, serializer) {
-        return serializer(
+        var root;
+
+        root = document.implementation.createDocument(null, 'nodetree', null);
+
+        root.documentElement.appendChild(
             translate(src_elt, translators.dom, translators.xml)
         );
+
+        return serializer(root);
     }
 
     function unserialize_from_string(dst_elt, src_doc) {
@@ -222,8 +225,11 @@ var tb = (function () {
 
     function serialize_by_ids(src_id, dst_id) {
         document.getElementById(dst_id).value = serialize_from_dom(
-            document.implementation.createDocument(null, 'nodetree', null),
-            document.getElementById(src_id)
+            document.getElementById(src_id).firstElementChild,
+            function (root) {
+                return (new window.XMLSerializer()).serializeToString(root);
+            }
+                // document.implementation.createDocument(null, 'nodetree', null)
         );
     }
 
