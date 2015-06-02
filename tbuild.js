@@ -33,16 +33,13 @@ var tb = (function () {
     };
     xml_translator.create_element = function (text) {
         var node, attr;
-
-        if (this.root === undefined) {
-            this.root = document.implementation.createDocument(null, 'nodetree', null);
-        }
         attr = this.root.createAttribute('value');
         attr.nodeValue = text;
         node = this.root.createElement('node');
         node.setAttributeNode(attr);
         return node;
     };
+    xml_translator.root = document.implementation.createDocument(null, 'nodetree', null);
 
     dom_translator = new DefaultTranslator();
     dom_translator.create_element = function (text) {
@@ -238,7 +235,7 @@ var tb = (function () {
         // recreate the tree based on the textarea contents
         unserialize_from_string(
             document.getElementById(dst_id),
-            xml_parser(document.getElementById(src_id).value).firstElementChild.firstElementChild
+            xml_parser(document.getElementById(src_id).value).firstChild.firstChild
         );
     }
 
@@ -246,7 +243,7 @@ var tb = (function () {
         // put a default one-node tree in there
         unserialize_from_string(
             document.getElementById(id),
-            xml_parser('<nodetree><node/></nodetree>').firstElementChild.firstElementChild
+            xml_parser('<nodetree><node/></nodetree>').firstChild.firstChild
         );
     }
 
